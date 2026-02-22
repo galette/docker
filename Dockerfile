@@ -41,6 +41,7 @@ RUN apt-get -y update \
   libicu-dev \
   libjpeg62-turbo-dev \
   libpng-dev \
+  libwebp-dev \
   libtidy-dev \
   tzdata \
   && apt-get clean \
@@ -50,7 +51,7 @@ RUN apt-get -y update \
 RUN docker-php-ext-install "-j$(nproc)" tidy gettext intl && \
   docker-php-ext-install mysqli pdo pdo_mysql && \
   docker-php-ext-enable mysqli && \
-  docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ && \
+  docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ --with-webp=/usr/include/ && \
   docker-php-ext-install "-j$(nproc)" gd 
 RUN apachectl restart
 
