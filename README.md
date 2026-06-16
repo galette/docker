@@ -1,7 +1,7 @@
 ![Docker Stars](https://img.shields.io/docker/stars/galette/galette.svg) ![Docker Pulls](https://img.shields.io/docker/pulls/galette/galette.svg) ![Docker Automated](https://img.shields.io/docker/automated/galette/galette.svg)
 # Galette using Docker
 
-Current repository hosts sources of the [Galette docker image](https://hub.docker.com/repository/docker/galette/galette), created and maintained by [Galette Community](https://github.com/galette-community/).
+Current repository hosts sources of the [Galette docker image](https://hub.docker.com/repository/docker/galette/galette).
 
 ## Contributing
 If you want to contribute to containerized galette, take a look [here](./CONTRIBUTING.md).
