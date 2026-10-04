@@ -33,7 +33,7 @@ Prerequisite is that you are co-admin of galette docker on docker hub: https://h
 7. Select "Read, Write, Delete"
 8. Click "Generate"
 9. Copy your personal access token (if you don't you have to restart this guide)
-10. Go to https://github.com/galette-community/docker/settings/secrets/actions
+10. Go to https://github.com/galette/docker/settings/secrets/actions
 11. Click New repository secret
 12. Name `DOCKERHUB_TOKEN`
 13. Secret must be the code you copied from step 9.

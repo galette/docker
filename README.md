@@ -10,7 +10,7 @@ Current repository hosts sources of the [Galette docker image](https://hub.docke
 If you want to contribute to containerized galette, take a look [here](./CONTRIBUTING.md).
 
 ## Features
-* integrated plugins : [events](https://github.com/galette/plugin-events), [fullcard](https://github.com/galette/plugin-fullcard), [maps](https://github.com/galette/plugin-maps), [objectslend](https://github.com/galette/plugin-objectslend) and [paypal](https://github.com/galette/plugin-paypal)
+* integrated plugins : [activities](https://github.com/galette-plugins/plugin-activities), [auto](https://github.com/galette-plugins/plugin-auto), [events](https://github.com/galette-plugins/plugin-events), [fullcard](https://github.com/galette-plugins/plugin-fullcard), [maps](https://github.com/galette-plugins/plugin-maps), [objectslend](https://github.com/galette-plugins/plugin-objectslend) and [paypal](https://github.com/galette-plugins/plugin-paypal)
 * MySQL/MariaDB and PostgreSQL support
 * mount volume to keep persistent database settings (*config.inc.php*)
 * keep data (images, logs, etc) persistent by mounting volumes
@@ -25,7 +25,7 @@ If you want to contribute to containerized galette, take a look [here](./CONTRIB
 ## Prerequisites
 This docker image has no included database, so you need to have that separately. Since you probably already are running docker, take a look [here](https://mariadb.com/kb/en/installing-and-using-mariadb-via-docker/#creating-a-container) for a guide on how to run MariaDB in a container.
 
-**Important!**: Following the instructions instructions for Galette versions earlier than 1.1.0 will **not** work, due to differences in volumes. If you are using a Galette version earlier than 1.1.0, please follow [the earlier version of these instructions](https://github.com/galette-community/docker/blob/1.0.4/README.md#how-to-use-this-image-using-docker-command-line). Instructions for version 1.0.4 should work for all ealier versions, but if you run into trouble with those, you can follow [version-specific instructions](https://github.com/galette-community/docker/tags).
+**Important!**: Following the instructions instructions for Galette versions earlier than 1.1.0 will **not** work, due to differences in volumes. If you are using a Galette version earlier than 1.1.0, please follow [the earlier version of these instructions](https://github.com/galette/docker/blob/1.0.4/README.md#how-to-use-this-image-using-docker-command-line). Instructions for version 1.0.4 should work for all ealier versions, but if you run into trouble with those, you can follow [version-specific instructions](https://github.com/galette/docker/tags).
 
 ## How to use this image using docker command line
 
@@ -43,10 +43,14 @@ If you are upgrading from an earlier version, you can skip step 1, 2 and 4 below
     -v  /path/to/config:/var/www/galette/config \
     -v  /path/to/data/attachments:/var/www/galette/data/attachments \
     -v  /path/to/data/cache:/var/www/galette/data/cache \
+    -v  /path/to/data/documents:/var/www/galette/data/documents \
+    -v  /path/to/data/exports:/var/www/galette/data/exports \
     -v  /path/to/data/files:/var/www/galette/data/files \
+    -v  /path/to/data/imports:/var/www/galette/data/imports \
     -v  /path/to/data/plugins:/var/www/galette/data/plugins \
     -v  /path/to/data/logs:/var/www/galette/data/logs \
     -v  /path/to/data/photos:/var/www/galette/data/photos \
+    -v  /path/to/data/tempimages:/var/www/galette/data/tempimages \
     -v  /path/to/data/templates_c:/var/www/galette/data/templates_c \
     galette/galette:1.3.0
     ```
