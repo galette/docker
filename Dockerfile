@@ -83,7 +83,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 ## Galette
 WORKDIR /usr/src
 RUN wget --progress=dot:giga ${MAIN_PACKAGE_URL}${GALETTE_RELEASE}.tar.bz2
-RUN tar jxvf ${GALETTE_RELEASE}.tar.bz2; mv ${GALETTE_RELEASE}/galette/* ${GALETTE_INSTALL} ; rm ${GALETTE_RELEASE}.tar.bz2
+## bin/console is shipped next to the galette directory, and finds it from its own location
+RUN tar jxvf ${GALETTE_RELEASE}.tar.bz2; mv ${GALETTE_RELEASE}/galette/* ${GALETTE_INSTALL} ; mv ${GALETTE_RELEASE}/bin /var/www/bin ; rm ${GALETTE_RELEASE}.tar.bz2
 
 ## Official plugins
 WORKDIR ${GALETTE_INSTALL}/plugins

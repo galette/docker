@@ -17,6 +17,7 @@ If you want to contribute to containerized galette, take a look [here](./CONTRIB
 * customize your CSS (volume)
 * user www-data instead of root
 * a crontab will run `reminder.php` (with user www-data) every day at 8:30am to send reminder mail
+* Galette command line, see [Command line](#command-line)
 * only webroot is exposed via Apache DocumentRoot and vhost
 * you can use reverse proxy to access Galette by domain or subdomain
 
@@ -80,6 +81,13 @@ If you are upgrading from an earlier version, you can skip step 1, 2 and 4 below
 
 ### Configure plugins
 From the main page of galette, click the plugin icon and manage the built-in modules. You can disable/enable them an initialize their database configuration from the UI.
+
+### Command line
+Galette console is available in the container, run it as www-data:
+
+    docker exec -u www-data galette php /var/www/bin/console list
+
+For example, `galette:install` can replace the web installer, and `galette:plugins:install-db` initializes plugins database.
 
 ## How to use this image using Docker Compose
 1. Copy [`docker-compose/galette/docker-compose.yml`](docker-compose/galette/docker-compose.yml) and [`docker-compose/galette/.env`](docker-compose/galette/.env) to the folder, where you want to persist your configuration.
