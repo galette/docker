@@ -31,11 +31,22 @@ ARG MAIN_PACKAGE_URL="https://galette.eu/download/"
 ARG PLUGIN_PACKAGE_URL="https://galette.eu/download/plugins/"
 #ARG MAIN_PACKAGE_URL="https://download.tuxfamily.org/galette/"
 #ARG PLUGIN_PACKAGE_URL="https://download.tuxfamily.org/galette/plugins/"
+
+## Supercronic runs scheduled tasks without root privileges
+## https://github.com/aptible/supercronic/releases
+ARG SUPERCRONIC_VERSION="v0.2.49"
+ARG SUPERCRONIC_SHA1SUM_AMD64="e63c11a9726b775a6a11801e81af4f3fb926aa68"
+ARG SUPERCRONIC_SHA1SUM_ARM64="0b6c5bb743e0b0dafed1132198c81807927ac413"
+ARG SUPERCRONIC_SHA1SUM_ARM="c98e10fc30de1147bfef8d7f2722f43c0db04fe5"
+## Set by buildx for each platform
+ARG TARGETARCH
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Install APT dependencies
 RUN a2enmod rewrite
 RUN apt-get -y update \
   && apt-get install --no-install-recommends -y \
-  cron \
   wget \
   libfreetype6-dev \
   libicu-dev \
@@ -117,19 +128,19 @@ RUN wget --progress=dot:giga ${PLUGIN_PACKAGE_URL}galette-plugin-activities-${PL
 RUN tar jxvf galette-plugin-activities-${PLUGIN_ACTIVITIES_VERSION}.tar.bz2; rm galette-plugin-activities-${PLUGIN_ACTIVITIES_VERSION}.tar.bz2; mv galette-plugin-activities-${PLUGIN_ACTIVITIES_VERSION} plugin-activities
 
 
-# CRON Auto-Reminder
-## Copy galette-cron file to the cron.d directory
-COPY galette-cron /etc/cron.d/galette-cron
-
-## Give execution rights on the cron job
-## Apply cron job
-# Create the log file to be able to run tail
-RUN chmod 0644 /etc/cron.d/galette-cron \
- && crontab -u www-data /etc/cron.d/galette-cron \ 
- && touch /var/log/cron.log
-
-# Run the command on container startup
-CMD ["cron", "tail -f /var/log/cron.log"]
+# CRON (reminders and mailing queue)
+## Run by supercronic from the entrypoint, as www-data; output goes to the container logs
+RUN case "${TARGETARCH}" in \
+      amd64) sum="${SUPERCRONIC_SHA1SUM_AMD64}" ;; \
+      arm64) sum="${SUPERCRONIC_SHA1SUM_ARM64}" ;; \
+      arm) sum="${SUPERCRONIC_SHA1SUM_ARM}" ;; \
+      *) echo "Unsupported architecture: ${TARGETARCH}"; exit 1 ;; \
+    esac \
+ && wget -q -O /usr/local/bin/supercronic \
+    "https://github.com/aptible/supercronic/releases/download/${SUPERCRONIC_VERSION}/supercronic-linux-${TARGETARCH}" \
+ && echo "${sum}  /usr/local/bin/supercronic" | sha1sum -c - \
+ && chmod +x /usr/local/bin/supercronic
+COPY galette-cron /etc/galette-cron
 
 # Chown /var/www/galette
 RUN chown -R www-data:www-data $GALETTE_INSTALL \

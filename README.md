@@ -15,8 +15,8 @@ If you want to contribute to containerized galette, take a look [here](./CONTRIB
 * keep data (images, logs, etc) persistent by mounting volumes
 * enabling Log IP addresses behind a proxy (*optional*)
 * customize your CSS (volume)
-* user www-data instead of root
-* a crontab will run `reminder.php` (with user www-data) every day at 8:30am to send reminder mail
+* Apache and cron jobs run as www-data
+* scheduled tasks send reminders every day at 8:30am, and drain the mailing queue every 15 minutes (see [Scheduled tasks](#scheduled-tasks))
 * Galette command line, see [Command line](#command-line)
 * only webroot is exposed via Apache DocumentRoot and vhost
 * you can use reverse proxy to access Galette by domain or subdomain
@@ -81,6 +81,13 @@ If you are upgrading from an earlier version, you can skip step 1, 2 and 4 below
 
 ### Configure plugins
 From the main page of galette, click the plugin icon and manage the built-in modules. You can disable/enable them an initialize their database configuration from the UI.
+
+### Scheduled tasks
+The image runs two scheduled tasks as www-data, using [supercronic](https://github.com/aptible/supercronic); their output goes to the container logs (`docker logs galette`):
+- `cron/reminder.php`, every day at 8:30am, sends membership reminders;
+- `cron/mailing_queue.php`, every 15 minutes, sends queued mass mailings and reminders when hourly or daily sending limits are set (new in Galette 1.3.0).
+
+Both need the public address of your instance, since they have no incoming request to guess it from: set `pref_galette_url` from **Configuration > Advanced configuration** in Galette. Until then, each run logs a message asking for it.
 
 ### Command line
 Galette console is available in the container, run it as www-data:

@@ -1,8 +1,10 @@
 #!/bin/sh
-	
-	if [ $RM_INSTALL_FOLDER = 1 ]; then
-        echo "\n* Removing install folder ...";
-        rm -r ${GALETTE_INSTALL}/install;
-    fi
-    
-    exec apachectl -D FOREGROUND
+
+if [ "$RM_INSTALL_FOLDER" = 1 ] && [ -d "${GALETTE_INSTALL}/install" ]; then
+    echo "* Removing install folder ..."
+    rm -rf "${GALETTE_INSTALL}/install"
+fi
+
+supercronic /etc/galette-cron &
+
+exec apachectl -D FOREGROUND
