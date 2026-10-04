@@ -35,7 +35,7 @@ If you are upgrading from an earlier version, you can skip step 1, 2 and 4 below
 
 1. Create folders corresponding to all the volumes in the next step.
 2. Optional: Create a file `config.inc.php` in the `config` folder. You can also copy [this](.example/config/config.inc.php) and alter it to suit your configuration. You can put in your database details up front, or wait until step 4.
-3. Start a container with the version of galette you want (e.g. V1.1.0) and the proper list of volumes.
+3. Start a container with the version of galette you want (e.g. 1.3.0) and the proper list of volumes.
     ```
     docker run  -d -p 8080:80 --name galette \
     -v  /path/to/config:/var/www/galette/config \
@@ -46,7 +46,7 @@ If you are upgrading from an earlier version, you can skip step 1, 2 and 4 below
     -v  /path/to/data/logs:/var/www/galette/data/logs \
     -v  /path/to/data/photos:/var/www/galette/data/photos \
     -v  /path/to/data/templates_c:/var/www/galette/data/templates_c \
-    galette/galette:1.1.0
+    galette/galette:1.3.0
     ```
     Remember to replace `./path/to/` with your own path.
 
