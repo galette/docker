@@ -1,4 +1,4 @@
-ARG PHP_VERSION=8.3
+ARG PHP_VERSION=8.5
 
 # Using PHP-Apache image
 FROM php:${PHP_VERSION}-apache
