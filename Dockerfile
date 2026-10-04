@@ -23,14 +23,12 @@ ARG PLUGIN_ACTIVITIES_VERSION="1.2.0"
 
 LABEL description="PHP $PHP_VERSION / Apache 2 / $GALETTE_RELEASE"
 
-LABEL org.opencontainers.image.source=https://github.com/galette-community/docker
+LABEL org.opencontainers.image.source=https://github.com/galette/docker
 LABEL org.opencontainers.image.description="Galette is a membership management web application towards non profit organizations."
 LABEL org.opencontainers.image.licenses=GPL-3.0-or-later
 
 ARG MAIN_PACKAGE_URL="https://galette.eu/download/"
 ARG PLUGIN_PACKAGE_URL="https://galette.eu/download/plugins/"
-#ARG MAIN_PACKAGE_URL="https://download.tuxfamily.org/galette/"
-#ARG PLUGIN_PACKAGE_URL="https://download.tuxfamily.org/galette/plugins/"
 
 ## Supercronic runs scheduled tasks without root privileges
 ## https://github.com/aptible/supercronic/releases
@@ -66,68 +64,60 @@ RUN docker-php-ext-install "-j$(nproc)" gettext intl && \
   docker-php-ext-enable mysqli && \
   docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ --with-webp=/usr/include/ && \
   docker-php-ext-install "-j$(nproc)" gd
-RUN apachectl restart
 
 # Enabling apache vhost
 COPY vhost.conf /etc/apache2/sites-available/vhost.conf
-RUN sed -i "s/galette.localhost/galette.${HOSTNAME}/" /etc/apache2/sites-available/vhost.conf \
-    && a2dissite -- * && a2ensite vhost.conf
+RUN a2dissite -- * && a2ensite vhost.conf
 
 # ENVIRONMENT VARIABLES
-## Galette ENV
-ENV GALETTE_CONFIG /var/www/galette/config
-ENV GALETTE_DATA /var/www/galette/data
-ENV GALETTE_INSTALL /var/www/galette
-ENV GALETTE_WEBROOT /var/www/galette/webroot
-ENV RM_INSTALL_FOLDER 0
+## Galette ENV
+ENV GALETTE_CONFIG=/var/www/galette/config
+ENV GALETTE_DATA=/var/www/galette/data
+ENV GALETTE_INSTALL=/var/www/galette
+ENV GALETTE_WEBROOT=/var/www/galette/webroot
+ENV RM_INSTALL_FOLDER=0
 
 # Changing DOCUMENT ROOT
 RUN mkdir $GALETTE_INSTALL
-ENV APACHE_DOCUMENT_ROOT $GALETTE_INSTALL
+ENV APACHE_DOCUMENT_ROOT=$GALETTE_INSTALL
 
 RUN sed -ri -e "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/*.conf \
  && sed -ri -e "s!/var/www/!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 ## Timezone
-ENV TZ Europe/Paris
+ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Installation Galette and plugins
+# Installation Galette and plugins
+# Download, extract and remove archives in a single layer, so they do not remain in the image
 ## Galette
-WORKDIR /usr/src
-RUN wget --progress=dot:giga ${MAIN_PACKAGE_URL}${GALETTE_RELEASE}.tar.bz2
 ## bin/console is shipped next to the galette directory, and finds it from its own location
-RUN tar jxvf ${GALETTE_RELEASE}.tar.bz2; mv ${GALETTE_RELEASE}/galette/* ${GALETTE_INSTALL} ; mv ${GALETTE_RELEASE}/bin /var/www/bin ; rm ${GALETTE_RELEASE}.tar.bz2
+WORKDIR /usr/src
+RUN wget -q ${MAIN_PACKAGE_URL}${GALETTE_RELEASE}.tar.bz2 \
+ && tar jxf ${GALETTE_RELEASE}.tar.bz2 \
+ && mv ${GALETTE_RELEASE}/galette/* ${GALETTE_INSTALL} \
+ && mv ${GALETTE_RELEASE}/bin /var/www/bin \
+ && rm -rf ${GALETTE_RELEASE} ${GALETTE_RELEASE}.tar.bz2
 
-## Official plugins
+## Official plugins
 WORKDIR ${GALETTE_INSTALL}/plugins
-### Auto
-RUN wget --progress=dot:giga ${PLUGIN_PACKAGE_URL}galette-plugin-auto-${PLUGIN_AUTO_VERSION}.tar.bz2
-RUN tar jxvf galette-plugin-auto-${PLUGIN_AUTO_VERSION}.tar.bz2; rm galette-plugin-auto-${PLUGIN_AUTO_VERSION}.tar.bz2; mv galette-plugin-auto-${PLUGIN_AUTO_VERSION} plugin-auto
-
-### Events
-RUN wget --progress=dot:giga ${PLUGIN_PACKAGE_URL}galette-plugin-events-${PLUGIN_EVENTS_VERSION}.tar.bz2
-RUN tar jxvf galette-plugin-events-${PLUGIN_EVENTS_VERSION}.tar.bz2; rm galette-plugin-events-${PLUGIN_EVENTS_VERSION}.tar.bz2; mv galette-plugin-events-${PLUGIN_EVENTS_VERSION} plugin-events
-
-### FullCard
-RUN wget --progress=dot:giga ${PLUGIN_PACKAGE_URL}galette-plugin-fullcard-${PLUGIN_FULLCARD_VERSION}.tar.bz2
-RUN tar jxvf galette-plugin-fullcard-${PLUGIN_FULLCARD_VERSION}.tar.bz2; rm galette-plugin-fullcard-${PLUGIN_FULLCARD_VERSION}.tar.bz2; mv galette-plugin-fullcard-${PLUGIN_FULLCARD_VERSION} plugin-fullcard
-
-### Maps
-RUN wget --progress=dot:giga ${PLUGIN_PACKAGE_URL}galette-plugin-maps-${PLUGIN_MAPS_VERSION}.tar.bz2
-RUN tar jxvf galette-plugin-maps-${PLUGIN_MAPS_VERSION}.tar.bz2; rm galette-plugin-maps-${PLUGIN_MAPS_VERSION}.tar.bz2; mv galette-plugin-maps-${PLUGIN_MAPS_VERSION} plugin-maps
-
-### ObjectsLend
-RUN wget --progress=dot:giga ${PLUGIN_PACKAGE_URL}galette-plugin-objectslend-${PLUGIN_OBJECTSLEND_VERSION}.tar.bz2
-RUN tar jxvf galette-plugin-objectslend-${PLUGIN_OBJECTSLEND_VERSION}.tar.bz2; rm galette-plugin-objectslend-${PLUGIN_OBJECTSLEND_VERSION}.tar.bz2; mv galette-plugin-objectslend-${PLUGIN_OBJECTSLEND_VERSION} plugin-objectslend
-
-### Paypal
-RUN wget --progress=dot:giga ${PLUGIN_PACKAGE_URL}galette-plugin-paypal-${PLUGIN_PAYPAL_VERSION}.tar.bz2
-RUN tar jxvf galette-plugin-paypal-${PLUGIN_PAYPAL_VERSION}.tar.bz2; rm galette-plugin-paypal-${PLUGIN_PAYPAL_VERSION}.tar.bz2; mv galette-plugin-paypal-${PLUGIN_PAYPAL_VERSION} plugin-paypal
-
-### Activities
-RUN wget --progress=dot:giga ${PLUGIN_PACKAGE_URL}galette-plugin-activities-${PLUGIN_ACTIVITIES_VERSION}.tar.bz2
-RUN tar jxvf galette-plugin-activities-${PLUGIN_ACTIVITIES_VERSION}.tar.bz2; rm galette-plugin-activities-${PLUGIN_ACTIVITIES_VERSION}.tar.bz2; mv galette-plugin-activities-${PLUGIN_ACTIVITIES_VERSION} plugin-activities
+RUN for plugin in \
+      auto:${PLUGIN_AUTO_VERSION} \
+      events:${PLUGIN_EVENTS_VERSION} \
+      fullcard:${PLUGIN_FULLCARD_VERSION} \
+      maps:${PLUGIN_MAPS_VERSION} \
+      objectslend:${PLUGIN_OBJECTSLEND_VERSION} \
+      paypal:${PLUGIN_PAYPAL_VERSION} \
+      activities:${PLUGIN_ACTIVITIES_VERSION} \
+    ; do \
+      name="${plugin%%:*}"; version="${plugin##*:}"; \
+      archive="galette-plugin-${name}-${version}"; \
+      wget -q "${PLUGIN_PACKAGE_URL}${archive}.tar.bz2" \
+      && tar jxf "${archive}.tar.bz2" \
+      && rm "${archive}.tar.bz2" \
+      && mv "${archive}" "plugin-${name}" \
+      || exit 1; \
+    done
 
 
 # CRON (reminders and mailing queue)
@@ -144,7 +134,7 @@ RUN case "${TARGETARCH}" in \
  && chmod +x /usr/local/bin/supercronic
 COPY galette-cron /etc/galette-cron
 
-# Chown /var/www/galette
+# Chown /var/www/galette
 RUN chown -R www-data:www-data $GALETTE_INSTALL \
  && chmod -R 0755 $GALETTE_DATA
 
