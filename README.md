@@ -11,6 +11,7 @@ If you want to contribute to containerized galette, take a look [here](./CONTRIB
 
 ## Features
 * integrated plugins : [events](https://github.com/galette/plugin-events), [fullcard](https://github.com/galette/plugin-fullcard), [maps](https://github.com/galette/plugin-maps), [objectslend](https://github.com/galette/plugin-objectslend) and [paypal](https://github.com/galette/plugin-paypal)
+* MySQL/MariaDB and PostgreSQL support
 * mount volume to keep persistent database settings (*config.inc.php*)
 * keep data (images, logs, etc) persistent by mounting volumes
 * enabling Log IP addresses behind a proxy (*optional*)

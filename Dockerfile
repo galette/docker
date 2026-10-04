@@ -53,17 +53,19 @@ RUN apt-get -y update \
   libjpeg62-turbo-dev \
   libpng-dev \
   libwebp-dev \
-  libtidy-dev \
+  libpq-dev \
   tzdata \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-# Install, Configure and Enable PHP extensions  
-RUN docker-php-ext-install "-j$(nproc)" tidy gettext intl && \
-  docker-php-ext-install mysqli pdo pdo_mysql && \
+# Install, Configure and Enable PHP extensions
+## opcache is always built in since PHP 8.5
+RUN docker-php-ext-install "-j$(nproc)" gettext intl && \
+  { php -m | grep -q "Zend OPcache" || docker-php-ext-install opcache; } && \
+  docker-php-ext-install mysqli pdo pdo_mysql pdo_pgsql && \
   docker-php-ext-enable mysqli && \
   docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ --with-webp=/usr/include/ && \
-  docker-php-ext-install "-j$(nproc)" gd 
+  docker-php-ext-install "-j$(nproc)" gd
 RUN apachectl restart
 
 # Enabling apache vhost
