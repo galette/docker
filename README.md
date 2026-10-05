@@ -33,9 +33,15 @@ Galette has a really nice installer, that runs you through database setup and in
 
 Therefore it is really important that you follow this guide exactly.
 
+> [!IMPORTANT]
+> Owner is the `www-data` user of the base image. UID is `33` on Debian; you can check using `docker run --rm --entrypoint id galette/galette:1.3.0 www-data`
+
 If you are upgrading from an earlier version, you can skip step 1, 2 and 4 below.
 
-1. Create folders corresponding to all the volumes in the next step.
+1. Create folders corresponding to all the volumes in the next step, and give them to `www-data` (uid and gid 33), which runs Apache and the console in the container; otherwise Galette cannot write its configuration file nor its data.
+    ```
+    sudo chown -R 33:33 /path/to/config /path/to/data
+    ```
 2. Optional: Create a file `config.inc.php` in the `config` folder. You can also copy [this](.example/config/config.inc.php) and alter it to suit your configuration. You can put in your database details up front, or wait until step 4.
 3. Start a container with the version of galette you want (e.g. 1.3.0) and the proper list of volumes.
     ```
@@ -104,7 +110,7 @@ For example, `galette:install` can replace the web installer, and `galette:plugi
 ## How to use this image using Docker Compose
 1. Copy [`docker-compose/galette/docker-compose.yml`](docker-compose/galette/docker-compose.yml) and [`docker-compose/galette/.env`](docker-compose/galette/.env) to the folder, where you want to persist your configuration.
 2. Optionally edit the values in `.env`
-3. Create a `config` folder and optionally add a `config.inc.php` file to that folder. You can copy the one from [here](.example/config/config.inc.php) and adjust it.
+3. Create a `config` folder and optionally add a `config.inc.php` file to that folder. You can copy the one from [here](.example/config/config.inc.php) and adjust it. Create the `data` folders as well, and give both to `www-data` (uid and gid 33), as Docker would otherwise create missing folders as root: `sudo chown -R 33:33 ./galette/config ./galette/data` (adapt to `GALETTE_DATA_DIR`).
 4. Launch with `docker-compose up -d`
 5. Go to http://localhost:8080/installer.php and complete installation (database, etc).
     - Note that http://localhost:8080 will report a failure, but adding /installer will work.
