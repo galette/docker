@@ -34,7 +34,7 @@ Galette has a really nice installer, that runs you through database setup and in
 Therefore it is really important that you follow this guide exactly.
 
 > [!IMPORTANT]
-> Owner is the `www-data` user of the base image. UID is `33` on Debian; you can check using `docker run --rm --entrypoint id galette/galette:1.3.0 www-data`
+> Owner is the `www-data` user of the base image. UID is `33` on Debian; you can check using `docker exec gt-galette id www-data`
 
 If you are upgrading from an earlier version, you can skip step 1, 2 and 4 below.
 
