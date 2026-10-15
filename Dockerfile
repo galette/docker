@@ -28,6 +28,8 @@ LABEL org.opencontainers.image.description="Galette is a membership management w
 LABEL org.opencontainers.image.licenses=GPL-3.0-or-later
 
 ARG MAIN_PACKAGE_URL="https://galette.eu/download/"
+## {name} is replaced with each plugin name, for sources with one location per
+## plugin, such as the nightly builds on GitHub
 ARG PLUGIN_PACKAGE_URL="https://galette.eu/download/plugins/"
 
 ## Supercronic runs scheduled tasks without root privileges
@@ -132,7 +134,8 @@ RUN for plugin in \
     ; do \
       name="${plugin%%:*}"; version="${plugin##*:}"; \
       archive="galette-plugin-${name}-${version}"; \
-      curl -fsSLO "${PLUGIN_PACKAGE_URL}${archive}.tar.bz2" \
+      url="${PLUGIN_PACKAGE_URL//\{name\}/${name}}"; \
+      curl -fsSLO "${url}${archive}.tar.bz2" \
       && tar jxf "${archive}.tar.bz2" \
       && rm "${archive}.tar.bz2" \
       && mv "${archive}" "plugin-${name}" \

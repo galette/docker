@@ -24,7 +24,8 @@ In steps:
 
 ### Automatic rebuilds
 - Every Monday, [build and publish](./.github/workflows/docker-build-and-publish.yml) rebuilds the latest release, so it gets the security fixes of its Debian and PHP base. It builds from `master` while the `Dockerfile` there still declares that Galette version, so improvements to the image reach it; once `master` has moved on to the next version, it builds from the release tag instead. Tags are listed in the [README](./README.md#image-tags-and-registries). It can also be run by hand from the Actions tab.
-- It pushes to Docker Hub and to `ghcr.io/galette/galette`, attests the image, and scans it with [Trivy](https://trivy.dev/): results are in the Security tab of the repository, under code scanning.
+- Every day, [nightly](./.github/workflows/docker-nightly.yml) builds the `nightly` tag from the `nightly` releases of [Galette](https://github.com/galette/galette/releases/tag/nightly) and of each official plugin.
+- Both push to Docker Hub and to `ghcr.io/galette/galette`, attest the image, and scan it with [Trivy](https://trivy.dev/): results are in the Security tab of the repository, under code scanning.
 
 ### Setting up an access token to deploy to docker hub
 Prerequisite is that you are co-admin of galette docker on docker hub: https://hub.docker.com/r/galette/galette
@@ -83,11 +84,13 @@ Follow the instructions above, but add any or both of these build args to the bu
     --build-arg GALETTE_RELEASE=galette-1.1.0-rc1-20240508-95bbbc2ede \
     --load .
     ```
-- If you want to add nightly official plugin releases, follow the instructions above, but add which release you want for each plugin as builds args, e.g. So for eample:
+#### Building the nightly image
+The `nightly` releases of Galette and of each plugin are on GitHub; `{name}` in `PLUGIN_PACKAGE_URL` is replaced with each plugin name:
     ```
-    docker buildx build --platform linux/amd64 -t galette-local-prerelease \
-    --build-arg MAIN_PACKAGE_URL=https://galette.eu/download/dev/ \
-    --build-arg GALETTE_RELEASE=galette-1.1.0-rc1-20240508-95bbbc2ede \
+    docker buildx build --platform linux/amd64 -t galette-local-nightly \
+    --build-arg MAIN_PACKAGE_URL=https://github.com/galette/galette/releases/download/nightly/ \
+    --build-arg GALETTE_RELEASE=galette-dev \
+    --build-arg 'PLUGIN_PACKAGE_URL=https://github.com/galette-plugins/plugin-{name}/releases/download/nightly/' \
     --build-arg PLUGIN_AUTO_VERSION=dev \
     --build-arg PLUGIN_EVENTS_VERSION=dev \
     --build-arg PLUGIN_FULLCARD_VERSION=dev \
