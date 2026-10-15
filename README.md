@@ -25,6 +25,14 @@ If you want to contribute to containerized galette, take a look [here](./CONTRIB
 ## Image tags and registries
 The image is published on [Docker Hub](https://hub.docker.com/r/galette/galette) as `galette/galette`, and on the GitHub Container Registry as `ghcr.io/galette/galette`; both carry the same tags. GHCR has no anonymous pull rate limit.
 
+| Tag | Content | Moves? |
+|---|---|---|
+| `1.3.0` | Galette 1.3.0 | rebuilt every week |
+| `1.3.0-20261015` | Galette 1.3.0, as built on that date | never |
+| `1.3`, `latest` | latest Galette release | rebuilt every week, and with each release |
+
+Version tags are rebuilt every week so they get the security fixes of their Debian and PHP base: a `docker compose pull` is enough to get them. If you need an image that never changes, use a dated tag, or pin the digest (`galette/galette@sha256:...`).
+
 Every image is attested by the workflow that built it; you can check where it comes from with:
 ```
 gh attestation verify oci://ghcr.io/galette/galette:1.3.0 --repo galette/docker

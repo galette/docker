@@ -9,14 +9,25 @@
 
 name: Build and publish Galette Docker image
 
+# Released images are rebuilt every week, under the same version tag, so they
+# pick up the security fixes of their Debian and PHP base. Every build also gets
+# a dated tag that never moves, for those who pin.
 on:
   release:
     types: [published]
+  schedule:
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: stable-image
+  cancel-in-progress: false
 
 jobs:
   resolve:
     name: Resolve version and tags
     runs-on: ubuntu-latest
+    if: github.repository == 'galette/docker'
     permissions:
       contents: read
     outputs:
@@ -24,17 +35,40 @@ jobs:
       ref: ${{ steps.version.outputs.ref }}
       tags: ${{ steps.version.outputs.tags }}
     steps:
+      # A release builds its own tag. A scheduled or manual run rebuilds the
+      # latest release: from the default branch while its Dockerfile still
+      # declares that version, so improvements to the image reach it (tags
+      # follow Galette versions, an image fix gets no tag of its own); from the
+      # release tag once the default branch has moved on to the next version.
+      # X.Y and latest only follow the latest release, so a fix on an older
+      # branch never takes them back.
       - name: Resolve version and tags
         id: version
         env:
+          GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           set -euo pipefail
-          version="$RELEASE_TAG"
+          latest=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)
+          version="${RELEASE_TAG:-$latest}"
           ref="$version"
+          if [ -z "$RELEASE_TAG" ]; then
+            branch=$(gh api "repos/${GITHUB_REPOSITORY}" --jq .default_branch)
+            declared=$(gh api "repos/${GITHUB_REPOSITORY}/contents/Dockerfile?ref=${branch}" \
+              -H 'Accept: application/vnd.github.raw' \
+              | sed -n 's/^ARG GALETTE_VERSION=//p')
+            if [ "$declared" = "$version" ]; then
+              ref="$branch"
+            fi
+          fi
+          echo "Building ${version} from ${ref}"
+          date=$(date -u +%Y%m%d)
           tags=()
           for image in galette/galette ghcr.io/galette/galette; do
-            tags+=("${image}:${version}" "${image}:latest")
+            tags+=("${image}:${version}" "${image}:${version}-${date}")
+            if [ "$version" = "$latest" ]; then
+              tags+=("${image}:$(cut -d. -f1-2 <<< "$version")" "${image}:latest")
+            fi
           done
           {
             echo "version=${version}"
@@ -61,5 +95,5 @@ jobs:
       build-args: |
         GALETTE_VERSION=${{ needs.resolve.outputs.version }}
       scan-category: trivy-stable
-      update-description: true
+      update-description: ${{ github.event_name == 'release' }}
     secrets: inherit
