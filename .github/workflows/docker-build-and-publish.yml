@@ -50,6 +50,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
     uses: ./.github/workflows/build-image.yml
     with:
       ref: ${{ needs.resolve.outputs.ref }}

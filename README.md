@@ -25,6 +25,11 @@ If you want to contribute to containerized galette, take a look [here](./CONTRIB
 ## Image tags and registries
 The image is published on [Docker Hub](https://hub.docker.com/r/galette/galette) as `galette/galette`, and on the GitHub Container Registry as `ghcr.io/galette/galette`; both carry the same tags. GHCR has no anonymous pull rate limit.
 
+Every image is attested by the workflow that built it; you can check where it comes from with:
+```
+gh attestation verify oci://ghcr.io/galette/galette:1.3.0 --repo galette/docker
+```
+
 ## Prerequisites
 This docker image has no included database, so you need to have that separately. Since you probably already are running docker, take a look [here](https://mariadb.com/kb/en/installing-and-using-mariadb-via-docker/#creating-a-container) for a guide on how to run MariaDB in a container.
 
