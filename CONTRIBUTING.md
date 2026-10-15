@@ -94,6 +94,13 @@ Follow the instructions above, but add any or both of these build args to the bu
     --load .
     ```
 
+### Scanning the image for vulnerabilities
+Trivy runs in a container, nothing to install:
+```
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.76.0 image --scanners vuln galette-local
+```
+Add `--ignore-unfixed` to only list what a rebuild can fix. Most remaining findings are in Debian packages with no fix available yet.
+
 ### Building for multiple architecures locally
 1. Start the docker daemon if it's not already started: `sudo dockerd`
 2. Create a builder-image `docker buildx create --name mybuilder --use --bootstrap` (see "Building with Buildx" [here](https://www.docker.com/blog/how-to-rapidly-build-multi-architecture-images-with-buildx/) for more details)
