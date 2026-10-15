@@ -1,0 +1,44 @@
+name: Nightly Galette Docker image
+
+# Galette develop with the develop branch of every official plugin, from the
+# "nightly" releases their own workflows refresh every night. Those are done by
+# about 09:00 UTC. Not meant for production use.
+on:
+  schedule:
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: nightly-image
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    if: github.repository == 'galette/docker'
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+      security-events: write
+    uses: ./.github/workflows/build-image.yml
+    with:
+      ref: ${{ github.sha }}
+      version: nightly
+      tags: |
+        galette/galette:nightly
+        ghcr.io/galette/galette:nightly
+      build-args: |
+        MAIN_PACKAGE_URL=https://github.com/galette/galette/releases/download/nightly/
+        GALETTE_RELEASE=galette-dev
+        PLUGIN_PACKAGE_URL=https://github.com/galette-plugins/plugin-{name}/releases/download/nightly/
+        PLUGIN_AUTO_VERSION=dev
+        PLUGIN_EVENTS_VERSION=dev
+        PLUGIN_FULLCARD_VERSION=dev
+        PLUGIN_MAPS_VERSION=dev
+        PLUGIN_OBJECTSLEND_VERSION=dev
+        PLUGIN_PAYPAL_VERSION=dev
+        PLUGIN_ACTIVITIES_VERSION=dev
+      scan-category: trivy-nightly
+    secrets: inherit

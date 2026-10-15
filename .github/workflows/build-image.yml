@@ -1,6 +1,6 @@
 # Builds the image, pushes it to Docker Hub and GHCR, attests it and scans it.
-# Called by docker-build-and-publish.yml (releases and weekly rebuilds); it is
-# not meant to be run on its own.
+# Called by docker-build-and-publish.yml (releases and weekly rebuilds) and by
+# docker-nightly.yml; it is not meant to be run on its own.
 
 name: Build image
 

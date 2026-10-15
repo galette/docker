@@ -30,6 +30,7 @@ The image is published on [Docker Hub](https://hub.docker.com/r/galette/galette)
 | `1.3.0` | Galette 1.3.0 | rebuilt every week |
 | `1.3.0-20261015` | Galette 1.3.0, as built on that date | never |
 | `1.3`, `latest` | latest Galette release | rebuilt every week, and with each release |
+| `nightly` | Galette and official plugins `develop` branches | rebuilt every day, **not for production** |
 
 Version tags are rebuilt every week so they get the security fixes of their Debian and PHP base: a `docker compose pull` is enough to get them. If you need an image that never changes, use a dated tag, or pin the digest (`galette/galette@sha256:...`).
 
