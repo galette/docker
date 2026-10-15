@@ -1,4 +1,4 @@
-# Builds the image and pushes it to Docker Hub and GHCR.
+# Builds the image, pushes it to Docker Hub and GHCR and attests it.
 # Called by docker-build-and-publish.yml; it is not meant to be run on its own.
 
 name: Build image
@@ -36,6 +36,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
@@ -81,6 +83,21 @@ jobs:
             org.opencontainers.image.version=${{ inputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
           build-args: ${{ inputs.build-args }}
+
+      # Verify with `gh attestation verify oci://ghcr.io/galette/galette:<tag> --repo galette/docker`
+      - name: Attest build provenance (GHCR)
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-name: ghcr.io/galette/galette
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+      - name: Attest build provenance (Docker Hub)
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-name: index.docker.io/galette/galette
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
 
       - name: Docker Hub Description
         if: inputs.update-description
