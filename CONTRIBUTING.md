@@ -22,6 +22,10 @@ In steps:
 10. The github action [build and publish](./.github/workflows/docker-build-and-publish.yml), will build and publish the image automatically.
     - Note: [build and publish](./.github/workflows/docker-build-and-publish.yml) uses the username and a personal access token from a docker-hub user with access to the [galette organisation](https://hub.docker.com/orgs/galette/members) on dockerhub. These are both stored as secrets in Github. These tokens should be the current maintainer's.
 
+### Automatic rebuilds
+- Every Monday, [build and publish](./.github/workflows/docker-build-and-publish.yml) rebuilds the latest release, so it gets the security fixes of its Debian and PHP base. It builds from `master` while the `Dockerfile` there still declares that Galette version, so improvements to the image reach it; once `master` has moved on to the next version, it builds from the release tag instead. Tags are listed in the [README](./README.md#image-tags-and-registries). It can also be run by hand from the Actions tab.
+- It pushes to Docker Hub and to `ghcr.io/galette/galette`, attests the image, and scans it with [Trivy](https://trivy.dev/): results are in the Security tab of the repository, under code scanning.
+
 ### Setting up an access token to deploy to docker hub
 Prerequisite is that you are co-admin of galette docker on docker hub: https://hub.docker.com/r/galette/galette
 1. Log in to docker hub
