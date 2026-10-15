@@ -1,4 +1,4 @@
-# Builds the image, pushes it to Docker Hub and GHCR and attests it.
+# Builds the image, pushes it to Docker Hub and GHCR, attests it and scans it.
 # Called by docker-build-and-publish.yml; it is not meant to be run on its own.
 
 name: Build image
@@ -23,6 +23,10 @@ on:
         required: false
         type: string
         default: ''
+      scan-category:
+        description: Code scanning category, so stable and nightly results do not replace each other
+        required: true
+        type: string
       update-description:
         description: Push README.md as the Docker Hub description
         required: false
@@ -31,13 +35,14 @@ on:
 
 jobs:
   build:
-    name: Build and push
+    name: Build, push and scan
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
       id-token: write
       attestations: write
+      security-events: write
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
@@ -98,6 +103,26 @@ jobs:
           subject-name: index.docker.io/galette/galette
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
+
+      # The image itself, not the tag, which may already have moved. Trivy runs
+      # from its own image rather than a third-party action. Never fatal: the
+      # point is to make the findings visible in the Security tab.
+      - name: Scan the image
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          docker run --rm -v "$PWD:/out" aquasec/trivy:0.76.0 image \
+            --quiet --scanners vuln --platform linux/amd64 \
+            --format sarif --output /out/trivy.sarif \
+            "ghcr.io/galette/galette@${DIGEST}" \
+          || echo "::warning::the vulnerability scan failed, see above"
+
+      - name: Upload scan results
+        if: hashFiles('trivy.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy.sarif
+          category: ${{ inputs.scan-category }}
 
       - name: Docker Hub Description
         if: inputs.update-description

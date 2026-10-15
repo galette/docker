@@ -52,6 +52,7 @@ jobs:
       packages: write
       id-token: write
       attestations: write
+      security-events: write
     uses: ./.github/workflows/build-image.yml
     with:
       ref: ${{ needs.resolve.outputs.ref }}
@@ -59,5 +60,6 @@ jobs:
       tags: ${{ needs.resolve.outputs.tags }}
       build-args: |
         GALETTE_VERSION=${{ needs.resolve.outputs.version }}
+      scan-category: trivy-stable
       update-description: true
     secrets: inherit
