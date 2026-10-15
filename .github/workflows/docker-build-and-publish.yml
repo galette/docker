@@ -33,7 +33,7 @@ jobs:
           version="$RELEASE_TAG"
           ref="$version"
           tags=()
-          for image in galette/galette; do
+          for image in galette/galette ghcr.io/galette/galette; do
             tags+=("${image}:${version}" "${image}:latest")
           done
           {
@@ -49,6 +49,7 @@ jobs:
     needs: resolve
     permissions:
       contents: read
+      packages: write
     uses: ./.github/workflows/build-image.yml
     with:
       ref: ${{ needs.resolve.outputs.ref }}

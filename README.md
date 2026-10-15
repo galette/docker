@@ -22,6 +22,9 @@ If you want to contribute to containerized galette, take a look [here](./CONTRIB
 * only webroot is exposed via Apache DocumentRoot and vhost
 * you can use reverse proxy to access Galette by domain or subdomain
 
+## Image tags and registries
+The image is published on [Docker Hub](https://hub.docker.com/r/galette/galette) as `galette/galette`, and on the GitHub Container Registry as `ghcr.io/galette/galette`; both carry the same tags. GHCR has no anonymous pull rate limit.
+
 ## Prerequisites
 This docker image has no included database, so you need to have that separately. Since you probably already are running docker, take a look [here](https://mariadb.com/kb/en/installing-and-using-mariadb-via-docker/#creating-a-container) for a guide on how to run MariaDB in a container.
 
