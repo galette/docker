@@ -86,6 +86,7 @@ jobs:
       packages: write
       id-token: write
       attestations: write
+      artifact-metadata: write
       security-events: write
     uses: ./.github/workflows/build-image.yml
     with:
