@@ -16,6 +16,7 @@ If you want to contribute to containerized galette, take a look [here](./CONTRIB
 * keep data (images, logs, etc) persistent by mounting volumes
 * enabling Log IP addresses behind a proxy (*optional*)
 * customize your CSS (volume)
+* PHP 8.4 and Apache from Debian packages, see [PHP settings](#php-settings)
 * Apache and cron jobs run as www-data
 * scheduled tasks send reminders every day at 8:30am, and drain the mailing queue every 15 minutes (see [Scheduled tasks](#scheduled-tasks))
 * Galette command line, see [Command line](#command-line)
@@ -121,6 +122,13 @@ The image runs two scheduled tasks as www-data, using [supercronic](https://gith
 - `cron/mailing_queue.php`, every 15 minutes, sends queued mass mailings and reminders when hourly or daily sending limits are set (new in Galette 1.3.0).
 
 Both need the public address of your instance, since they have no incoming request to guess it from: set `pref_galette_url` from **Configuration > Advanced configuration** in Galette. Until then, each run logs a message asking for it.
+
+### PHP settings
+The image runs PHP 8.4 with Apache, both from Debian packages, and follows the PHP version of its Debian release. PHP uses Debian's production settings; to change some of them, mount an ini file in `/usr/local/etc/php/conf.d/`, which both Apache and the command line (including scheduled tasks) read:
+
+    -v ./path/to/galette-php.ini:/usr/local/etc/php/conf.d/galette-php.ini
+
+This folder is the one of the official PHP image, on which earlier images were based, so existing mounts keep working. Replacing the whole `/usr/local/etc/php/php.ini` file, however, no longer has any effect: move your settings to an ini file in `conf.d/`.
 
 ### Command line
 Galette console is available in the container, run it as www-data:
