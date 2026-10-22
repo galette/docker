@@ -43,6 +43,7 @@ jobs:
       packages: write
       id-token: write
       attestations: write
+      artifact-metadata: write
       security-events: write
     steps:
       - name: Check out the repo
@@ -110,13 +111,17 @@ jobs:
           push-to-registry: true
 
       # The image itself, not the tag, which may already have moved. Trivy runs
-      # from its own image rather than a third-party action. Never fatal: the
-      # point is to make the findings visible in the Security tab.
+      # from its own image rather than a third-party action, so it gets the
+      # registry credentials of the login steps above through the mounted
+      # Docker config: it cannot pull a private GHCR package otherwise. Never
+      # fatal: the point is to make the findings visible in the Security tab.
       - name: Scan the image
         env:
           DIGEST: ${{ steps.build.outputs.digest }}
         run: |
-          docker run --rm -v "$PWD:/out" aquasec/trivy:0.76.0 image \
+          docker run --rm -v "$PWD:/out" \
+            -v "${HOME}/.docker/config.json:/root/.docker/config.json:ro" \
+            aquasec/trivy:0.76.0 image \
             --quiet --scanners vuln --platform linux/amd64 \
             --format sarif --output /out/trivy.sarif \
             "ghcr.io/galette/galette@${DIGEST}" \
