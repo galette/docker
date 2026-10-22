@@ -52,7 +52,9 @@ RUN a2enmod rewrite
 ## image ships for phpize go too. They accounted for most of the CVEs scanners
 ## report on the image, linux-libc-dev alone for two thirds of them.
 ## libc6-dev is named apart: PHPIZE_DEPS asks for the virtual libc-dev.
-## opcache is always built in since PHP 8.5
+## opcache is always built in since PHP 8.5. Not checked with `php -m | grep -q`:
+## grep exits on the first match, php -m then dies writing to the closed pipe,
+## pipefail turns that into a failure, and building opcache again breaks.
 ## SC2016: the single-quoted $ belong to awk and php, not to the shell
 # hadolint ignore=SC2016
 RUN apt-get -y update \
@@ -67,7 +69,7 @@ RUN apt-get -y update \
   libwebp-dev \
   libpq-dev \
   && docker-php-ext-install "-j$(nproc)" gettext intl \
-  && { php -m | grep -q "Zend OPcache" || docker-php-ext-install opcache; } \
+  && { php -r 'exit(extension_loaded("Zend OPcache") ? 0 : 1);' || docker-php-ext-install opcache; } \
   && docker-php-ext-install mysqli pdo pdo_mysql pdo_pgsql \
   && docker-php-ext-enable mysqli \
   && docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ --with-webp=/usr/include/ \
