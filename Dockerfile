@@ -1,8 +1,8 @@
-ARG PHP_VERSION=8.5
-
-# Using PHP-Apache image
-FROM php:${PHP_VERSION}-apache
-ARG PHP_VERSION
+# Apache and PHP from Debian packages: the extensions come prebuilt for every
+# architecture, nothing is compiled when building the image
+FROM debian:trixie-slim
+## The PHP version Debian trixie ships, only used to name its packages
+ARG PHP_VERSION=8.4
 ARG GALETTE_VERSION=1.3.1
 ARG GALETTE_RELEASE=galette-${GALETTE_VERSION}
 
@@ -43,55 +43,47 @@ ARG TARGETARCH
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-RUN a2enmod rewrite
-
-# Install, Configure and Enable PHP extensions, in a single layer
+# Install Apache, PHP and its extensions, in a single layer
 ## Debian security updates published after the base image are applied first.
-## Headers and compilers are only needed to build the extensions: once built,
-## only the libraries they link against are kept, and the compilers the base
-## image ships for phpize go too. They accounted for most of the CVEs scanners
-## report on the image, linux-libc-dev alone for two thirds of them.
-## libc6-dev is named apart: PHPIZE_DEPS asks for the virtual libc-dev.
-## opcache is always built in since PHP 8.5. Not checked with `php -m | grep -q`:
-## grep exits on the first match, php -m then dies writing to the closed pipe,
-## pipefail turns that into a failure, and building opcache again breaks.
-## SC2016: the single-quoted $ belong to awk and php, not to the shell
+## gettext, iconv, ctype, fileinfo, posix and sodium come with php-common.
+## Debian disables the session garbage collector and leaves it to a cron job
+## that does not run in the container: turn it back on.
+## Logs go to the container output, as with the official php image.
+## Apache runs as www-data, which must own its runtime directories.
+## SC2016: the single-quoted $ belong to php, not to the shell
 # hadolint ignore=SC2016
 RUN apt-get -y update \
   && apt-get -y upgrade \
-  && apt-get install --no-install-recommends -y bzip2 tzdata \
-  && savedAptMark="$(apt-mark showmanual)" \
   && apt-get install --no-install-recommends -y \
-  libfreetype6-dev \
-  libicu-dev \
-  libjpeg62-turbo-dev \
-  libpng-dev \
-  libwebp-dev \
-  libpq-dev \
-  && docker-php-ext-install "-j$(nproc)" gettext intl \
-  && { php -r 'exit(extension_loaded("Zend OPcache") ? 0 : 1);' || docker-php-ext-install opcache; } \
-  && docker-php-ext-install mysqli pdo pdo_mysql pdo_pgsql \
-  && docker-php-ext-enable mysqli \
-  && docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ --with-webp=/usr/include/ \
-  && docker-php-ext-install "-j$(nproc)" gd \
-  && apt-mark auto '.*' > /dev/null \
-  && printf '%s\n' "$savedAptMark" | xargs -r apt-mark manual > /dev/null \
-  && printf '%s\n' "$PHPIZE_DEPS" libc6-dev | xargs -r apt-mark auto > /dev/null \
-  && find "$(php-config --extension-dir)" -name '*.so' -exec ldd '{}' ';' \
-    | awk '/=>/ { so = $(NF-1); if (index(so, "/usr/local/") == 1) { next }; gsub("^/(usr/)?", "", so); printf "*%s\n", so }' \
-    | sort -u \
-    | xargs -r dpkg-query --search \
-    | cut -d: -f1 \
-    | sort -u \
-    | xargs -r apt-mark manual > /dev/null \
-  && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
-  && php -r 'foreach (["gd", "intl", "gettext", "mysqli", "pdo_mysql", "pdo_pgsql", "Zend OPcache"] as $e) { extension_loaded($e) || exit(1); }' \
+  apache2 \
+  bzip2 \
+  ca-certificates \
+  curl \
+  libapache2-mod-php${PHP_VERSION} \
+  php${PHP_VERSION}-cli \
+  php${PHP_VERSION}-curl \
+  php${PHP_VERSION}-gd \
+  php${PHP_VERSION}-intl \
+  php${PHP_VERSION}-mbstring \
+  php${PHP_VERSION}-mysql \
+  php${PHP_VERSION}-opcache \
+  php${PHP_VERSION}-pgsql \
+  php${PHP_VERSION}-xml \
+  tzdata \
+  && php -r 'foreach (["ctype", "curl", "dom", "fileinfo", "gd", "gettext", "iconv", "intl", "mbstring", "mysqli", "pdo_mysql", "pdo_pgsql", "posix", "SimpleXML", "sodium", "xmlreader", "xmlwriter", "Zend OPcache"] as $e) { extension_loaded($e) || exit(1); }' \
+  && printf 'session.gc_probability = 1\n' > "/etc/php/${PHP_VERSION}/mods-available/galette.ini" \
+  && phpenmod galette \
+  && a2enmod rewrite \
+  && ln -sfT /dev/stderr /var/log/apache2/error.log \
+  && ln -sfT /dev/stdout /var/log/apache2/access.log \
+  && ln -sfT /dev/stdout /var/log/apache2/other_vhosts_access.log \
+  && chown -R --no-dereference www-data:www-data /var/log/apache2 /var/run/apache2 /var/lock/apache2 \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
 # Enabling apache vhost
 COPY vhost.conf /etc/apache2/sites-available/vhost.conf
-RUN a2dissite -- * && a2ensite vhost.conf
+RUN a2dissite 000-default && a2ensite vhost.conf
 
 # ENVIRONMENT VARIABLES
 ## Galette ENV
@@ -105,8 +97,12 @@ ENV RM_INSTALL_FOLDER=0
 RUN mkdir $GALETTE_INSTALL
 ENV APACHE_DOCUMENT_ROOT=$GALETTE_INSTALL
 
+## Galette ships .htaccess files that deny access to its private folders
 RUN sed -ri -e "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/*.conf \
- && sed -ri -e "s!/var/www/!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+ && sed -ri -e "s!/var/www/!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf \
+ && printf '<Directory %s>\n\tOptions -Indexes\n\tAllowOverride All\n</Directory>\n' "${APACHE_DOCUMENT_ROOT}" \
+    > /etc/apache2/conf-available/galette.conf \
+ && a2enconf galette
 
 ## Timezone
 ENV TZ=Europe/Paris

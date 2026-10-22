@@ -1,3 +1,3 @@
 # Run by supercronic, as www-data
-30 8 * * * /usr/local/bin/php -f /var/www/galette/cron/reminder.php
-*/15 * * * * /usr/local/bin/php -f /var/www/galette/cron/mailing_queue.php
+30 8 * * * /usr/bin/php -f /var/www/galette/cron/reminder.php
+*/15 * * * * /usr/bin/php -f /var/www/galette/cron/mailing_queue.php

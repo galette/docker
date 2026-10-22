@@ -1,0 +1,47 @@
+# Builds the image of a pull request for every platform, under the same
+# conditions as build-image.yml, without logging in to any registry nor pushing
+# anything: checks that the image still builds, and how long it takes, before
+# it is merged.
+
+name: Test Docker image build
+
+on:
+  pull_request:
+    paths:
+      - Dockerfile
+      - vhost.conf
+      - galette-cron
+      - scripts/**
+      - .github/workflows/docker-build-test.yml
+  workflow_dispatch:
+
+concurrency:
+  group: build-test-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5.3.0
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm/v7,linux/arm64
+          pull: true
+          no-cache: true
+          push: false
