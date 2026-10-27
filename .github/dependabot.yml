@@ -9,3 +9,8 @@ updates:
       github-actions-all:
         patterns:
           - "*"
+    ignore:
+      # Both bundle hadolint 2.15, whose ENV after SHELL forgets the bash shell
+      # and raises false SC3xxx warnings: https://github.com/hadolint/hadolint/issues/1241
+      - dependency-name: "hadolint/hadolint-action"
+        versions: ["3.4.0", "3.5.0"]
