@@ -13,6 +13,8 @@ on:
   push:
     branches: 
       - '**'
+  # Pushes to a fork do not reach this repository
+  pull_request:
 jobs:
   dockerfile_linting:
     name: Dockerfile linting
