@@ -1,0 +1,90 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit review configuration.
+# https://docs.coderabbit.ai/reference/configuration
+
+language: en-US
+tone_instructions: "Be concise and factual. Report only issues worth fixing; skip praise and style preferences."
+
+reviews:
+  profile: chill
+  # Leave the pull request description as its author wrote it
+  high_level_summary: false
+  sequence_diagrams: false
+  estimate_code_review_effort: false
+  suggested_labels: false
+  suggested_reviewers: false
+  in_progress_fortune: false
+  poem: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    ignore_usernames:
+      - "dependabot[bot]"
+
+  path_filters:
+    - "!LICENSE"
+
+  path_instructions:
+    - path: "**"
+      instructions: |
+        This repository only packages released Galette and plugin archives into a
+        Docker image; Galette itself lives in galette/galette.
+        Report only what this pull request causes: a problem the change introduces,
+        breaks, or makes reachable where it was not before, pointing at the changed
+        line responsible. Do not report pre-existing problems the change does not touch.
+        Do not report what the CI already enforces: hadolint, with .config/hadolint.yml.
+        Security: if the change fixes a vulnerability exploitable in a published image,
+        post a single neutral sentence asking the author to close the pull request and
+        report it privately with GitHub's "Report a vulnerability" button, in the
+        Security tab of the repository. Never describe the vulnerability or how to
+        exploit it: review comments are public.
+        README.md and CONTRIBUTING.md document build arguments, tags and volumes:
+        flag a change to any of them that leaves the documentation stale.
+
+    - path: "Dockerfile"
+      instructions: |
+        The image is built for linux/amd64, linux/arm64 and linux/arm/v7: anything
+        architecture-specific must handle all three.
+        The shell runs with pipefail: `cmd | grep -q` fails at random when grep exits
+        early and cmd dies on SIGPIPE.
+        Build dependencies are purged in the same layer they are installed in; the
+        libraries the PHP extensions link against are kept by the ldd step. A new
+        extension must be added to the extension_loaded() check at the end of that
+        layer. bzip2 is installed explicitly because the archives are .tar.bz2.
+        Archives are downloaded, extracted and removed in a single layer.
+        A SUPERCRONIC_VERSION change needs the three SHA1 sums updated with it.
+        GALETTE_VERSION and the PLUGIN_*_VERSION arguments must name versions that are
+        actually released; the image tag is the Galette version.
+        The container runs as www-data: anything written at runtime must belong to it.
+
+    - path: "scripts/entrypoint.sh"
+      instructions: |
+        Run by /bin/sh, not bash: POSIX shell only.
+
+    - path: ".github/workflows/**"
+      instructions: |
+        Images are pushed to Docker Hub and ghcr.io with repository secrets. Flag any
+        change that exposes secrets or write permissions to pull requests from forks,
+        or that widens job permissions beyond what the job needs.
+
+  pre_merge_checks:
+    docstrings:
+      mode: "off"
+
+  # Changes are pushed by their authors only
+  finishing_touches:
+    autofix:
+      enabled: false
+    unit_tests:
+      enabled: false
+
+  tools:
+    # Run by the CI with .config/hadolint.yml
+    hadolint:
+      enabled: false
+    languagetool:
+      enabled: false
+
+chat:
+  art: false
