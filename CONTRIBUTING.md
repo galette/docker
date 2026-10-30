@@ -4,7 +4,7 @@ Building and maintaining this project is solely about the containerization of th
 ## Updating to next Galette version
 If you just want to upgrade to the next version of Galette, all you need to do is change the version number in the Dockerfile: `ARG GALETTE_VERSION=<version>`. You might also need to update the plugin versions: `ARG PLUGIN_<plugin name>_VERSION=<version>`. 
 
-You can also provide these arguments as a build-args (see [Building the docker image with another version of PHP and/or Galette](#building-the-docker-image-with-another-version-of-php-andor-galette)).
+You can also provide these arguments as a build-args (see [Building the docker image with another version of Galette](#building-the-docker-image-with-another-version-of-galette)).
 
 After this, you _should_ of course build and test like described in [Building and testing locally](#building-and-testing-locally). But you can also commit the change, merge it to master and start a new release in GitHub. The github action [build and publish](./.github/workflows/docker-build-and-publish.yml), will build and publish the image, when a new release is published.
 
@@ -66,15 +66,16 @@ Although it's possible to build packages without `dockerd` running, using [`buil
     * replace `galette-local` with any name you would like to give your local image
     * `--load` loads the image into your local docker, so you can use it as a container image.
 
-#### Building the docker image with another version of PHP and/or Galette
-Follow the instructions above, but add any or both of these build args to the build command: `PHP_VERSION` and/or `GALETTE_VERSION`. For example:
+#### Building the docker image with another version of Galette
+Follow the instructions above, but add the `GALETTE_VERSION` build arg to the build command. For example:
 
     ```
     docker buildx build --platform linux/amd64 -t galette-local-special \
-    --build-arg PHP_VERSION=8.2 \
     --build-arg GALETTE_VERSION=1.0.4 \
     --load .
     ```
+
+PHP and its extensions are the packages of the Debian release the image is based on, nothing is compiled: `PHP_VERSION` only names those packages, and changing PHP version means changing the base image.
 
 #### Building the docker image with Galette pre-releases
 - Follow the instructions above, but override the two build args: `MAIN_PACKAGE_URL` and `GALETTE_RELEASE`. For example:
