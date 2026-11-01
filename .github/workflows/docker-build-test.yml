@@ -27,8 +27,12 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
+      # The repository is the build context: a pull request could copy .git
+      # into the image, and the token checkout would otherwise leave there.
       - name: Check out the repo
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
