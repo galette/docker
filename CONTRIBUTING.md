@@ -56,7 +56,8 @@ Although it's possible to build packages without `dockerd` running, using [`buil
 
 ### Linting
 1. Start the docker daemon if it's not already started: `sudo dockerd`
-2. Run hadolint (containerized): `docker run --rm -i -v ./.config/hadolint.yml:/.config/hadolint.yaml hadolint/hadolint < Dockerfile`
+2. Run hadolint (containerized): `docker run --rm -i -v ./.config/hadolint.yml:/.config/hadolint.yaml hadolint/hadolint:v2.12.0 < Dockerfile`
+    * use the version of the [lint workflow](./.github/workflows/dockerfile-hadolint.yml): hadolint 2.15 forgets the bash `SHELL` after an `ENV` instruction and raises false `SC3xxx` warnings ([hadolint#1241](https://github.com/hadolint/hadolint/issues/1241)), which is why Dependabot does not upgrade the action there
 3. Fix errors and warnings or add them to ignore list of the [hadolint configuration file](./.config/hadolint.yml) if there is a good reason for that. Read more [here](https://github.com/hadolint/hadolint).
 
 ### Building the docker image locally
