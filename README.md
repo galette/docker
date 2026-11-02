@@ -28,8 +28,8 @@ The image is published on [Docker Hub](https://hub.docker.com/r/galette/galette)
 
 | Tag | Content | Moves? |
 |---|---|---|
-| `1.3.0` | Galette 1.3.0 | rebuilt every week |
-| `1.3.0-20261015` | Galette 1.3.0, as built on that date | never |
+| `1.3.2` | Galette 1.3.2 | rebuilt every week |
+| `1.3.2-20261103` | Galette 1.3.2, as built on that date | never |
 | `1.3`, `latest` | latest Galette release | rebuilt every week, and with each release |
 | `nightly` | Galette and official plugins `develop` branches | rebuilt every day, **not for production** |
 
@@ -37,7 +37,7 @@ Version tags are rebuilt every week so they get the security fixes of their Debi
 
 Every image is attested by the workflow that built it; you can check where it comes from with:
 ```
-gh attestation verify oci://ghcr.io/galette/galette:1.3.0 --repo galette/docker
+gh attestation verify oci://ghcr.io/galette/galette:1.3.2 --repo galette/docker
 ```
 
 ## Prerequisites
@@ -52,7 +52,7 @@ Galette has a really nice installer, that runs you through database setup and in
 Therefore it is really important that you follow this guide exactly.
 
 > [!IMPORTANT]
-> Owner is the `www-data` user of the base image. UID is `33` on Debian; you can check using `docker run --rm --entrypoint id galette/galette:1.3.0 www-data`
+> Owner is the `www-data` user of the base image. UID is `33` on Debian; you can check using `docker run --rm --entrypoint id galette/galette:1.3.2 www-data`
 
 If you are upgrading from an earlier version, you can skip step 1, 2, 4 and 5 below.
 
@@ -61,7 +61,7 @@ If you are upgrading from an earlier version, you can skip step 1, 2, 4 and 5 be
     sudo chown -R 33:33 /path/to/config /path/to/data
     ```
 2. Optional: Create a file `config.inc.php` in the `config` folder. You can also copy [this](.example/config/config.inc.php) and alter it to suit your configuration. You can put in your database details up front, or wait until step 5.
-3. Start a container with the version of galette you want (e.g. 1.3.0) and the proper list of volumes.
+3. Start a container with the version of galette you want (e.g. 1.3.2) and the proper list of volumes.
     ```
     docker run  -d -p 8080:80 --name galette \
     -v  /path/to/config:/var/www/galette/config \
@@ -76,7 +76,7 @@ If you are upgrading from an earlier version, you can skip step 1, 2, 4 and 5 be
     -v  /path/to/data/photos:/var/www/galette/data/photos \
     -v  /path/to/data/tempimages:/var/www/galette/data/tempimages \
     -v  /path/to/data/templates_c:/var/www/galette/data/templates_c \
-    galette/galette:1.3.0
+    galette/galette:1.3.2
     ```
     Remember to replace `./path/to/` with your own path.
 

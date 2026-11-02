@@ -3,7 +3,7 @@
 FROM debian:trixie-slim
 ## The PHP version Debian trixie ships, only used to name its packages
 ARG PHP_VERSION=8.4
-ARG GALETTE_VERSION=1.3.1
+ARG GALETTE_VERSION=1.3.2
 ARG GALETTE_RELEASE=galette-${GALETTE_VERSION}
 
 # Maintained by GrasDK for Galette community
