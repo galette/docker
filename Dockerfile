@@ -122,7 +122,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 ## Galette
 ## bin/console is shipped next to the galette directory, and finds it from its own location
 WORKDIR /usr/src
-RUN curl -fsSLO "${MAIN_PACKAGE_URL}${GALETTE_RELEASE}.tar.bz2" \
+RUN curl -fsSLO --retry 3 --retry-all-errors --retry-delay 10 "${MAIN_PACKAGE_URL}${GALETTE_RELEASE}.tar.bz2" \
  && tar jxf ${GALETTE_RELEASE}.tar.bz2 \
  && mv ${GALETTE_RELEASE}/galette/* ${GALETTE_INSTALL} \
  && mv ${GALETTE_RELEASE}/bin /var/www/bin \
@@ -142,7 +142,7 @@ RUN for plugin in \
       name="${plugin%%:*}"; version="${plugin##*:}"; \
       archive="galette-plugin-${name}-${version}"; \
       url="${PLUGIN_PACKAGE_URL//\{name\}/${name}}"; \
-      curl -fsSLO "${url}${archive}.tar.bz2" \
+      curl -fsSLO --retry 3 --retry-all-errors --retry-delay 10 "${url}${archive}.tar.bz2" \
       && tar jxf "${archive}.tar.bz2" \
       && rm "${archive}.tar.bz2" \
       && mv "${archive}" "plugin-${name}" \
@@ -158,7 +158,7 @@ RUN case "${TARGETARCH}" in \
       arm) sum="${SUPERCRONIC_SHA1SUM_ARM}" ;; \
       *) echo "Unsupported architecture: ${TARGETARCH}"; exit 1 ;; \
     esac \
- && curl -fsSL -o /usr/local/bin/supercronic \
+ && curl -fsSL --retry 3 --retry-all-errors --retry-delay 10 -o /usr/local/bin/supercronic \
     "https://github.com/aptible/supercronic/releases/download/${SUPERCRONIC_VERSION}/supercronic-linux-${TARGETARCH}" \
  && echo "${sum}  /usr/local/bin/supercronic" | sha1sum -c - \
  && chmod +x /usr/local/bin/supercronic
